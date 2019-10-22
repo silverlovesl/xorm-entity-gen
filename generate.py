@@ -6,6 +6,7 @@ import MySQLdb
 import sys
 import argparse
 import re
+import inflection
 
 
 def parse_param():
@@ -55,7 +56,7 @@ def mapto_go_type(type_name, is_allow_null):
     """
     type_name = type_name.lower()
     rtnV = ""
-    if type_name.startswith("varchar") or type_name.startswith("char"):
+    if type_name.startswith("varchar") or type_name.startswith("char") or type_name.startswith("text"):
         rtnV = "string" if not is_allow_null else "null.String"
     elif type_name.startswith("int") or type_name.startswith("bigint"):
         rtnV = "int" if not is_allow_null else "null.Int"
@@ -83,9 +84,10 @@ def init_engine(opt):
 
 def create_entity_for_xorm(df, package_name, table_name):
     table_name = snake_to_camel(table_name)
+    singularized_table_name = inflection.singularize(table_name)
     entity_source = ["package {}\n".format(package_name)]
-    entity_source.append("// {} Entity".format(table_name))
-    entity_source.append("type {} struct {{".format(table_name))
+    entity_source.append("// {} Entity".format(singularized_table_name))
+    entity_source.append("type {} struct {{".format(singularized_table_name))
 
     for index, row in df.iterrows():
         col_name = row["Field"]

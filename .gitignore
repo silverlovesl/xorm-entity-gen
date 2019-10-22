@@ -109,4 +109,4 @@ venv.bak/
 result/*
 vscode
 
-gen.sh
+gen-grid-ai.sh
