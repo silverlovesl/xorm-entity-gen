@@ -1,0 +1,4 @@
+{
+  "python.pythonPath": "/Users/silver/.pyenv/versions/anaconda3-2019.07/bin/python",
+  "python.formatting.provider": "yapf"
+}

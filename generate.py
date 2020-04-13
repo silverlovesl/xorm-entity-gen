@@ -14,15 +14,30 @@ def parse_param():
     Parse parameter
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('-u', '--user', help='User for login if not current user')
-    parser.add_argument('-p', '--passwd', help='Password to use when connecting to server.')
-    parser.add_argument('-P', '--port', type=int, help='Port to use when connecting to server.', default=3306)
-    parser.add_argument('-H', '--host', help='Server host', default='localhost')
+    parser.add_argument('-u',
+                        '--user',
+                        help='User for login if not current user')
+    parser.add_argument('-p',
+                        '--passwd',
+                        help='Password to use when connecting to server.')
+    parser.add_argument('-P',
+                        '--port',
+                        type=int,
+                        help='Port to use when connecting to server.',
+                        default=3306)
+    parser.add_argument('-H',
+                        '--host',
+                        help='Server host',
+                        default='localhost')
     parser.add_argument('-d', '--database', help='Database to use')
-    parser.add_argument('--package_name', help='Go package name', default="entities")
+    parser.add_argument('--package_name',
+                        help='Go package name',
+                        default="entities")
     parser.add_argument('-t', '--table_name', help='Table name')
     # parser.add_argument('-o', '--output_path', help='Output path', default='./')
-    parser.add_argument('--charset', help='Charset,default [utf8]', default='utf8')
+    parser.add_argument('--charset',
+                        help='Charset,default [utf8]',
+                        default='utf8')
     return parser
 
 
@@ -56,15 +71,19 @@ def mapto_go_type(type_name, is_allow_null):
     """
     type_name = type_name.lower()
     rtnV = ""
-    if type_name.startswith("varchar") or type_name.startswith("char") or type_name.startswith("text"):
+    if type_name.startswith("varchar") or type_name.startswith(
+            "char") or type_name.startswith("text"):
         rtnV = "string" if not is_allow_null else "null.String"
     elif type_name.startswith("int") or type_name.startswith("bigint"):
         rtnV = "int" if not is_allow_null else "null.Int"
-    elif type_name.startswith("decimal") or type_name.startswith("numeric") or type_name.startswith("double"):
+    elif type_name.startswith("decimal") or type_name.startswith(
+            "numeric") or type_name.startswith(
+                "double") or type_name.startswith('float'):
         rtnV = "float64" if not is_allow_null else "null.Float"
     elif type_name.startswith("bit") or type_name.startswith("tinyint"):
         rtnV = "bool" if not is_allow_null else "null.Bool"
-    elif type_name.startswith("timestamp") or type_name.startswith("date") or type_name.startswith("datetime"):
+    elif type_name.startswith("timestamp") or type_name.startswith(
+            "date") or type_name.startswith("datetime"):
         rtnV = "time.Time" if not is_allow_null else "null.Time"
     return rtnV
 
@@ -101,9 +120,16 @@ def create_entity_for_xorm(df, package_name, table_name):
         field_name = fix_go_lint(field_name)
         go_type = mapto_go_type(col_type, col_allow_null)
         extra_name = handle_col_extra(col_extra)
+        allow_null = "null" if col_allow_null else "not null"
+        default = '' if col_default == "" else "defalut \'{}\'".format(
+            col_default)
 
         key = " pk" if col_is_key else ""
-        entity_source.append("{} {} `xorm:\"\'{}\'{}{}\"`".format(field_name, go_type, col_name, key, extra_name))
+        # entity_source.append("{} {} `xorm:\"\'{}\'{}{}\"` ".format(field_name, go_type, col_name, key, extra_name))
+
+        entity_source.append("{} {} `xorm:\"\'{}\'{} {} {} {}\"`".format(
+            field_name, go_type, col_name, key, col_type, allow_null,
+            extra_name))
 
     entity_source.append("}")
     return "\n".join(entity_source)
@@ -119,10 +145,13 @@ def main():
         args = parser.parse_args()
         conn = init_engine(args)
         df = psql.read_sql("DESC {}".format(args.table_name), con=conn)
-        entity_code = create_entity_for_xorm(df, args.package_name, args.table_name)
+        entity_code = create_entity_for_xorm(df, args.package_name,
+                                             args.table_name)
         print(entity_code)
     except TypeError as e:
-        print("\ndemo:\n\t python generate.py --user=root --passwd= --database=my_db --table_name=CUSTOMER > ./customer.go\n\n")
+        print(
+            "\ndemo:\n\t python generate.py --user=root --passwd= --database=my_db --table_name=CUSTOMER > ./customer.go\n\n"
+        )
         parser.print_help(sys.stderr)
     except MySQLdb.Error as e:
         print("Bad connection, please check your argument\n")
